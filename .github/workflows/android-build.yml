@@ -1,0 +1,51 @@
+name: android-build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Dar permisos a gradlew
+        run: chmod +x ./gradlew
+
+      - name: Pruebas unitarias
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Análisis lint
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Compilar APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Renombrar APK
+        run: |
+          mkdir -p salida
+          cp app/build/outputs/apk/debug/app-debug.apk \
+             "salida/${{ vars.APP_NOMBRE }}.v${{ vars.APP_VERSION }}.apk"
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: salida/*.apk
+          retention-days: 90
+
+      - name: Publicar reportes de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas
+          path: app/build/reports/
