@@ -8,6 +8,7 @@ SUBIR_A_GITHUB.md
 .gradle/
 build/
 app/build/
+.kotlin/
 /captures
 .externalNativeBuild
 .cxx
