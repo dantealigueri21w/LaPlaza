@@ -2,6 +2,7 @@ package pe.appmobile.laplaza.ui.screens
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.down
 import androidx.compose.ui.test.moveTo
 import androidx.compose.ui.test.onAllNodesWithText
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.up
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -233,5 +235,22 @@ class ArmarDiscursoScreenTest {
 
         compose.onAllNodesWithText("Declamar").assertCountEquals(0)
         compose.onNodeWithContentDescription("Gancho uno, sin seleccionar").assertExists()
+    }
+
+    @Test
+    fun `cada bloque -- una opcion real del reto -- mide al menos 120dp de alto`() {
+        compose.setContent {
+            LaPlazaTheme {
+                ArmarDiscursoScreen(
+                    tituloTema = "Preséntate a la plaza",
+                    bloques = bloquesDeMentira(),
+                    onDeclamar = {},
+                    onVolver = {}
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Gancho uno, sin seleccionar").assertHeightIsAtLeast(120.dp)
     }
 }

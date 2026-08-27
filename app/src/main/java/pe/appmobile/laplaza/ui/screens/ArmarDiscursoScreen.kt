@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -308,6 +309,7 @@ private fun ChipBloque(
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
         modifier = modifier
             .widthIn(max = 280.dp)
+            .heightIn(min = 120.dp)
             .offset { IntOffset(0, offsetVisible.roundToInt()) }
             .pointerInput(bloque.id) {
                 detectDragGestures(
@@ -323,7 +325,10 @@ private fun ChipBloque(
             .clickable(onClickLabel = bloque.texto, role = Role.Button, onClick = onColocar)
             .semantics { contentDescription = descripcion }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // align(Center) porque el panel ahora es mas alto que su contenido (heightIn min
+        // 120dp, seccion 6 del maestro: es una opcion real del reto, no un icono
+        // secundario) -- PanelDePlaza no centra su contenido por defecto (Box normal).
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.Center)) {
             if (seleccionado) {
                 Icon(
                     imageVector = Icons.Filled.Check,
