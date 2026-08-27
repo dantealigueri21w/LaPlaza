@@ -50,4 +50,34 @@ class MotorPregonTest {
         val segundo = MotorPregon.generar(empate)
         assertEquals(primero.variableDestacada, segundo.variableDestacada)
     }
+
+    // Bug real (27/08/2026): Rodrigo se quedo en silencio total en su celular, incluso
+    // despues de la primera correccion de MotorFluidez, y el pregon seguia diciendo "Tu
+    // voz se escucho en todo el Mostrador". Causa: sin voz real las 4 variables quedan en
+    // 0,0,0,0 (un empate), y variableMasFuerte elegia "volumen" solo por ser la primera
+    // clave del mapa -- nunca fue de verdad la variable "mas fuerte".
+    @Test
+    fun `silencio total (las 4 variables en 0) no genera un pregon de elogio falso`() {
+        val silencioTotal = datos(volumen = 0f, entonacion = 0f, ritmo = 0f, fluidez = 0f)
+        val pregon = MotorPregon.generar(silencioTotal)
+        assertEquals("silencio", pregon.variableDestacada)
+        assertEquals(
+            "No te escuchamos esta vez en El Balcón. ¿Lo intentamos de nuevo?",
+            pregon.titular
+        )
+    }
+
+    @Test
+    fun `una senal minima real (por encima del umbral) no cae al mensaje de silencio`() {
+        val vozMuyBaja = datos(volumen = 0.06f, entonacion = 0f, ritmo = 0f, fluidez = 0f)
+        val pregon = MotorPregon.generar(vozMuyBaja)
+        assertEquals("volumen", pregon.variableDestacada)
+    }
+
+    @Test
+    fun `huboVozReal es false solo cuando las 4 variables estan por debajo del umbral`() {
+        assertEquals(false, MotorPregon.huboVozReal(datos(0f, 0f, 0f, 0f)))
+        assertEquals(false, MotorPregon.huboVozReal(datos(0.02f, 0.01f, 0f, 0.03f)))
+        assertEquals(true, MotorPregon.huboVozReal(datos(0.1f, 0f, 0f, 0f)))
+    }
 }

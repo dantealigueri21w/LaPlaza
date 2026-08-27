@@ -164,3 +164,28 @@ app/src/main/res/
 Verificado con `aapt2 dump badging` sobre el APK recompilado:
 `application: label='La Plaza' icon='res/mipmap-anydpi-v26/ic_launcher.xml'` (antes,
 `icon=''`). Permisos sin cambios: solo `RECORD_AUDIO`, sin `INTERNET`.
+
+## Segunda corrección el mismo día: la correccion de fluidez dejó expuesto un empate en 0
+
+Con la corrección anterior de `MotorFluidez` ya en el APK, Rodrigo volvió a probar en su
+celular sin decir nada, y el pregón seguía diciendo "Tu voz se escuchó en todo el
+Mostrador" -- un elogio distinto, pero igual de falso.
+
+**Causa real:** sin ninguna ventana de audio real detectada como voz, las 4 variables
+(volumen, entonación, ritmo, y ahora también fluidez, tras la corrección anterior) quedan
+exactamente en 0. `MotorPregon.variableMasFuerte` elegía la de mayor puntaje con
+`maxByOrNull`, que en un empate se queda con la primera clave del mapa ("volumen") sin que
+ese 0 significara nada real que destacar.
+
+**Corrección:** `MotorPregon.generar` ahora chequea primero si hubo señal real de voz (el
+máximo de las 4 variables por encima de un umbral mínimo, 0.05 -- los "altos y bajos" reales
+del volumen y la entonación, sugerencia de Rodrigo tomando como referencia el mismo enfoque
+de El Gran Telón). Si no la hay, devuelve un pregón honesto ("No te escuchamos esta vez en
+[rincón]. ¿Lo intentamos de nuevo?") en vez de fabricar un elogio sobre una variable que
+nunca fue realmente la más fuerte. 3 tests nuevos en `MotorPregonTest.kt` cubren el caso
+real, una señal mínima real que sigue funcionando normal, y `huboVozReal` directamente.
+
+```
+./gradlew clean testDebugUnitTest lintDebug assembleDebug
+→ BUILD SUCCESSFUL, 206 pruebas, 0 fallos, 0 errores (203 anteriores + 3 nuevas)
+```
