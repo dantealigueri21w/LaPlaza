@@ -13,6 +13,12 @@ interface TemaDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertarTodos(temas: List<TemaEntity>)
 
+    /** Insercion de uno solo: el sembrado necesita el id autogenerado real de CADA tema
+     * (id = 0 antes de insertar) para poder insertar sus 9 bloques de contenido con el
+     * temaId correcto, algo que insertarTodos (bulk, sin retorno) no permite. */
+    @Insert
+    suspend fun insertar(tema: TemaEntity): Long
+
     @Query("SELECT * FROM tema WHERE rinconId = :rinconId ORDER BY orden")
     fun obtenerPorRincon(rinconId: String): Flow<List<TemaEntity>>
 
