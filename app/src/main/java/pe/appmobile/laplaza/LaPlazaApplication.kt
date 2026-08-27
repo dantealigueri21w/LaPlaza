@@ -24,7 +24,12 @@ class LaPlazaApplication : Application() {
             applicationContext,
             AppDatabase::class.java,
             "la_plaza.db"
-        ).build()
+        )
+            // La app todavia no tiene usuarios reales con datos que preservar entre
+            // versiones de esquema: mas simple que escribir una Migration real por cada
+            // cambio en esta etapa. Revisar antes de la primera entrega con datos reales.
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
 
         repositorio = LaPlazaRepository(
             perfilDao = baseDeDatos.perfilDao(),

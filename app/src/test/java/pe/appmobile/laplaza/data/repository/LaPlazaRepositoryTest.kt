@@ -15,6 +15,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import pe.appmobile.laplaza.data.local.AppDatabase
 import pe.appmobile.laplaza.data.local.entity.RachaEntity
+import pe.appmobile.laplaza.domain.model.IdRincon
 import pe.appmobile.laplaza.domain.model.Pregon
 
 /**
@@ -293,5 +294,62 @@ class LaPlazaRepositoryTest {
 
         assertEquals(4, racha?.diasSeguidos)
         assertEquals(20L, racha?.ultimoDiaEpoch)
+    }
+
+    @Test
+    fun `actualizarRachaTrasActividad calcula la racha real desde las fechas de los intentos guardados`() = runBlocking {
+        repositorio.sembrarSiEsNecesario()
+        val tema = db.temaDao().obtenerPorRincon("BALCON").first().first { it.orden == 1 }
+        // Dia 100 y dia 101 seguidos, en milisegundos reales de INICIO DE ESE DIA en la
+        // zona del dispositivo -- no aritmetica de epoch-day en UTC, que no coincide con
+        // java.time.LocalDate.toEpochDay() salvo que la zona local sea UTC.
+        val zona = java.time.ZoneId.systemDefault()
+        val millisDia100 = java.time.LocalDate.ofEpochDay(100L).atStartOfDay(zona).toInstant().toEpochMilli()
+        val millisDia101 = java.time.LocalDate.ofEpochDay(101L).atStartOfDay(zona).toInstant().toEpochMilli()
+        repositorio.registrarIntento(tema.id, false, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, fechaEpochMs = millisDia100)
+        repositorio.registrarIntento(tema.id, false, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, fechaEpochMs = millisDia101)
+
+        val racha = repositorio.actualizarRachaTrasActividad(hoyEpochDia = 101L)
+
+        assertEquals(2, racha.diasSeguidos)
+        assertEquals(101L, racha.ultimoDiaEpoch)
+        assertEquals(2, repositorio.obtenerRacha().first()?.diasSeguidos)
+    }
+
+    // ---------- Insignias: evaluarYOtorgarInsignias ----------
+
+    @Test
+    fun `evaluarYOtorgarInsignias otorga Primera Voz tras el primer intento real y no la vuelve a otorgar despues`() = runBlocking {
+        repositorio.sembrarSiEsNecesario()
+        val tema = db.temaDao().obtenerPorRincon("BALCON").first().first { it.orden == 1 }
+        repositorio.registrarIntento(tema.id, false, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, fechaEpochMs = 1000L)
+
+        val nuevasLaPrimeraVez = repositorio.evaluarYOtorgarInsignias(rinconesCompletados = emptySet())
+        assertTrue("PRIMERA_VOZ" in nuevasLaPrimeraVez)
+        assertTrue(repositorio.obtenerInsignias().first().first { it.id == "PRIMERA_VOZ" }.fechaObtenidaEpochMs != null)
+
+        val nuevasLaSegundaVez = repositorio.evaluarYOtorgarInsignias(rinconesCompletados = emptySet())
+        assertTrue("ya estaba ganada, no debe volver a reportarse como nueva", "PRIMERA_VOZ" !in nuevasLaSegundaVez)
+    }
+
+    @Test
+    fun `evaluarYOtorgarInsignias otorga la insignia de un rincon completado`() = runBlocking {
+        repositorio.sembrarSiEsNecesario()
+
+        val nuevas = repositorio.evaluarYOtorgarInsignias(rinconesCompletados = setOf(IdRincon.KIOSCO))
+
+        assertTrue("VOZ_DEL_KIOSCO" in nuevas)
+        assertTrue(repositorio.obtenerInsignias().first().first { it.id == "VOZ_DEL_KIOSCO" }.fechaObtenidaEpochMs != null)
+    }
+
+    @Test
+    fun `un intento via Rincon Libre no cuenta para Primera Voz`() = runBlocking {
+        repositorio.sembrarSiEsNecesario()
+        val tema = db.temaDao().obtenerPorRincon("BALCON").first().first { it.orden == 1 }
+        repositorio.registrarIntento(tema.id, false, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, viaRinconLibre = true, fechaEpochMs = 1000L)
+
+        val nuevas = repositorio.evaluarYOtorgarInsignias(rinconesCompletados = emptySet())
+
+        assertTrue("PRIMERA_VOZ" !in nuevas)
     }
 }

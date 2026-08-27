@@ -28,9 +28,17 @@ object Rutas {
     fun rinconRuta(rinconId: String): String = "rincon/$rinconId"
 
     const val ARG_TEMA_ID = "temaId"
-    const val ARMAR_DISCURSO = "armar/{$ARG_TEMA_ID}"
 
-    fun armarDiscursoRuta(temaId: Long): String = "armar/$temaId"
+    /** true si se entro por el Rincon Libre -viaja pegado al temaId por las dos rutas
+     * siguientes (Navigation Compose no lleva el rinconId de origen de otra forma una
+     * vez elegido el tema) porque decide, en [DECLAMACION], si el intento cuenta para
+     * las 11 insignias por resultado o solo para Companero de Chirri (ver la ficha,
+     * seccion "Rincon Libre", y [pe.appmobile.laplaza.domain.engine.MotorInsignias]). */
+    const val ARG_VIA_LIBRE = "viaLibre"
+
+    const val ARMAR_DISCURSO = "armar/{$ARG_TEMA_ID}/{$ARG_VIA_LIBRE}"
+
+    fun armarDiscursoRuta(temaId: Long, viaLibre: Boolean): String = "armar/$temaId/$viaLibre"
 
     /** La pantalla de declamacion real (microfono, indicador en vivo, pregon). El
      * discurso armado en si no viaja por la ruta -Navigation Compose solo pasa
@@ -39,7 +47,7 @@ object Rutas {
      * saber a que tema pertenece (por ejemplo, para volver a cargar datos si el proceso
      * murio entre medio). Reutiliza [ARG_TEMA_ID], el mismo nombre de argumento que
      * [ARMAR_DISCURSO]. */
-    const val DECLAMACION = "declamacion/{$ARG_TEMA_ID}"
+    const val DECLAMACION = "declamacion/{$ARG_TEMA_ID}/{$ARG_VIA_LIBRE}"
 
-    fun declamacionRuta(temaId: Long): String = "declamacion/$temaId"
+    fun declamacionRuta(temaId: Long, viaLibre: Boolean): String = "declamacion/$temaId/$viaLibre"
 }

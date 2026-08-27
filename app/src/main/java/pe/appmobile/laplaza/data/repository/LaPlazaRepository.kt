@@ -1,5 +1,8 @@
 package pe.appmobile.laplaza.data.repository
 
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import pe.appmobile.laplaza.data.local.dao.BloqueContenidoDao
@@ -22,7 +25,10 @@ import pe.appmobile.laplaza.data.seed.SemillaBloques
 import pe.appmobile.laplaza.data.seed.SemillaInsignias
 import pe.appmobile.laplaza.data.seed.SemillaRincones
 import pe.appmobile.laplaza.data.seed.SemillaTemas
+import pe.appmobile.laplaza.domain.engine.MotorInsignias
 import pe.appmobile.laplaza.domain.engine.MotorProgreso
+import pe.appmobile.laplaza.domain.model.IdRincon
+import pe.appmobile.laplaza.domain.model.IntentoParaInsignias
 import pe.appmobile.laplaza.domain.model.Pregon
 import pe.appmobile.laplaza.domain.model.SugerenciaRepaso
 
@@ -132,6 +138,7 @@ class LaPlazaRepository(
         puntajeRitmo: Float,
         puntajeFluidez: Float,
         puntajeCompuesto: Float,
+        viaRinconLibre: Boolean = false,
         fechaEpochMs: Long = System.currentTimeMillis()
     ): Long = intentoDao.insertar(
         IntentoEntity(
@@ -142,7 +149,8 @@ class LaPlazaRepository(
             puntajeEntonacion = puntajeEntonacion,
             puntajeRitmo = puntajeRitmo,
             puntajeFluidez = puntajeFluidez,
-            puntajeCompuesto = puntajeCompuesto
+            puntajeCompuesto = puntajeCompuesto,
+            viaRinconLibre = viaRinconLibre
         )
     )
 
@@ -190,9 +198,65 @@ class LaPlazaRepository(
     suspend fun marcarInsigniaGanada(id: String, fechaEpochMs: Long = System.currentTimeMillis()) =
         insigniaDao.marcarObtenida(id, fechaEpochMs)
 
+    /**
+     * Bisagra entre Room y [MotorInsignias.insigniasGanadas]: lee TODO el historial de
+     * intentos (con el rinconId real de cada tema, vía JOIN en el DAO) y las insignias ya
+     * ganadas, evalúa el motor de dominio, marca en Room solo las que son nuevas respecto
+     * a lo que ya estaba ganado, y devuelve ese conjunto de nuevas -para que quien llama
+     * (el ViewModel) pueda, si quiere, celebrar una insignia recién obtenida sin volver a
+     * consultar Room. Llamarlo dos veces seguidas sin intentos nuevos de por medio
+     * devuelve un conjunto vacío la segunda vez: [marcarInsigniaGanada] no se repite sobre
+     * una insignia que ya tenía fecha.
+     */
+    suspend fun evaluarYOtorgarInsignias(
+        rinconesCompletados: Set<IdRincon>,
+        fechaEpochMs: Long = System.currentTimeMillis()
+    ): Set<String> {
+        val intentos = intentoDao.obtenerTodosParaInsignias().map {
+            IntentoParaInsignias(
+                temaId = it.temaId,
+                rinconId = it.rinconId,
+                viaRinconLibre = it.viaRinconLibre,
+                puntajeVolumen = it.puntajeVolumen,
+                puntajeCompuesto = it.puntajeCompuesto,
+                puntajeFluidez = it.puntajeFluidez
+            )
+        }
+        val yaGanadas = insigniaDao.obtenerTodas().first()
+            .filter { it.fechaObtenidaEpochMs != null }
+            .map { it.id }
+            .toSet()
+
+        val ganadasAhora = MotorInsignias.insigniasGanadas(intentos, rinconesCompletados)
+        val nuevas = ganadasAhora - yaGanadas
+        nuevas.forEach { insigniaDao.marcarObtenida(it, fechaEpochMs) }
+        return nuevas
+    }
+
     // ---------- Racha ----------
 
     fun obtenerRacha(): Flow<RachaEntity?> = rachaDao.obtener()
 
     suspend fun actualizarRacha(racha: RachaEntity) = rachaDao.guardar(racha)
+
+    /**
+     * Recalcula la racha real desde las fechas de TODOS los intentos guardados (vía
+     * [MotorProgreso.calcularRacha], puro y ya probado) y la persiste. La traducción de
+     * milisegundos reales a "día calendario" vive aquí, no en el motor de dominio: depende
+     * de la zona horaria del dispositivo (`java.time.LocalDate`, sección 5.4 del maestro),
+     * algo que un motor de `domain/` no debe conocer.
+     */
+    suspend fun actualizarRachaTrasActividad(
+        hoyEpochDia: Long = LocalDate.now().toEpochDay()
+    ): RachaEntity {
+        val diasConIntento = intentoDao.obtenerTodos().first().map { intento ->
+            Instant.ofEpochMilli(intento.fechaEpochMs).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay()
+        }
+        val racha = RachaEntity(
+            diasSeguidos = MotorProgreso.calcularRacha(diasConIntento, hoyEpochDia),
+            ultimoDiaEpoch = hoyEpochDia
+        )
+        rachaDao.guardar(racha)
+        return racha
+    }
 }

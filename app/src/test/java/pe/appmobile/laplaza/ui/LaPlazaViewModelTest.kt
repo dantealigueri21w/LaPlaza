@@ -3,9 +3,11 @@ package pe.appmobile.laplaza.ui
 import android.os.Looper
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -14,8 +16,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import pe.appmobile.laplaza.audio.ResultadoEnVivo
 import pe.appmobile.laplaza.data.local.AppDatabase
 import pe.appmobile.laplaza.data.repository.LaPlazaRepository
+import pe.appmobile.laplaza.domain.model.DiscursoArmado
+import pe.appmobile.laplaza.domain.model.NivelAtencion
+import pe.appmobile.laplaza.domain.model.PuntajeAudiencia
+import pe.appmobile.laplaza.domain.model.ResultadoAcustico
 
 /**
  * Pruebas de LaPlazaViewModel contra una base Room real en memoria (mismo patron que
@@ -109,5 +116,71 @@ class LaPlazaViewModelTest {
         esperarHasta { viewModel.listoParaNavegar.value }
 
         assertEquals("Luz", viewModel.perfil.value?.alias)
+    }
+
+    private fun resultadoEnVivoDeMentira(puntajeCompuesto: Float = 0.5f) = ResultadoEnVivo(
+        acustico = ResultadoAcustico(
+            volumenPromedio = 0.6f,
+            variacionEntonacionSemitonos = 3f,
+            ritmoSilabasPorMinuto = 120f,
+            pausas = emptyList(),
+            duracionTotalMs = 3000L
+        ),
+        fluidez = 0.6f,
+        puntaje = PuntajeAudiencia(puntajeCompuesto, NivelAtencion.ATENTA)
+    )
+
+    // ---------- finalizarDeclamacion ----------
+
+    @Test
+    fun `una declamacion real registra el intento, guarda el pregon en el Cuaderno y otorga Primera Voz`() {
+        val viewModel = LaPlazaViewModel(repositorio)
+        esperarHasta { viewModel.listoParaNavegar.value }
+        val tema = runBlocking { viewModel.temasDe("BALCON") }.first { it.orden == 1 }
+        val discurso = DiscursoArmado(temaId = tema.id, bloques = emptyList())
+
+        val pregon = runBlocking {
+            viewModel.finalizarDeclamacion(
+                discurso = discurso,
+                resultado = resultadoEnVivoDeMentira(),
+                nombreTema = tema.titulo,
+                nombreRincon = "El Balcón",
+                esRepaso = false,
+                viaRinconLibre = false
+            )
+        }
+
+        esperarHasta { viewModel.pregones.value.isNotEmpty() }
+        assertEquals(pregon.titular, viewModel.pregones.value.first().titular)
+
+        val insignias = runBlocking { repositorio.obtenerInsignias().first() }
+        assertTrue(insignias.first { it.id == "PRIMERA_VOZ" }.fechaObtenidaEpochMs != null)
+    }
+
+    @Test
+    fun `una declamacion via Rincon Libre no entra al Cuaderno ni otorga Primera Voz, pero si devuelve un pregon para mostrar`() {
+        val viewModel = LaPlazaViewModel(repositorio)
+        esperarHasta { viewModel.listoParaNavegar.value }
+        val tema = runBlocking { viewModel.temasDe("BALCON") }.first { it.orden == 1 }
+        val discurso = DiscursoArmado(temaId = tema.id, bloques = emptyList())
+
+        val pregon = runBlocking {
+            viewModel.finalizarDeclamacion(
+                discurso = discurso,
+                resultado = resultadoEnVivoDeMentira(),
+                nombreTema = tema.titulo,
+                nombreRincon = "El Balcón",
+                esRepaso = true,
+                viaRinconLibre = true
+            )
+        }
+
+        assertTrue(pregon.titular.isNotBlank())
+        Thread.sleep(200)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue("el Cuaderno no debe recibir una entrada nueva via Rincon Libre", viewModel.pregones.value.isEmpty())
+
+        val insignias = runBlocking { repositorio.obtenerInsignias().first() }
+        assertFalse(insignias.first { it.id == "PRIMERA_VOZ" }.fechaObtenidaEpochMs != null)
     }
 }

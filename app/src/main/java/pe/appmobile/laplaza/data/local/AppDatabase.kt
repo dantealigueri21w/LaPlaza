@@ -25,7 +25,9 @@ import pe.appmobile.laplaza.data.local.entity.TemaEntity
         BloqueContenidoEntity::class, IntentoEntity::class, PregonEntity::class,
         InsigniaEntity::class, RachaEntity::class
     ],
-    version = 1,
+    // v2: agrega IntentoEntity.viaRinconLibre (ver LaPlazaApplication -- destructiva a
+    // proposito, la app todavia no tiene usuarios reales con datos que preservar).
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {

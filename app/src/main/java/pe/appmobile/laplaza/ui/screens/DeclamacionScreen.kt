@@ -115,6 +115,7 @@ fun DeclamacionScreen(
     viewModel: LaPlazaViewModel,
     temaId: Long,
     onContinuar: () -> Unit,
+    viaRinconLibre: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -204,7 +205,8 @@ fun DeclamacionScreen(
                 resultado = actual.resultado,
                 nombreTema = nombreTema,
                 nombreRincon = nombreRincon,
-                esRepaso = esRepaso
+                esRepaso = esRepaso,
+                viaRinconLibre = viaRinconLibre
             )
         }
     }
@@ -237,7 +239,8 @@ fun DeclamacionScreen(
                     resultado = resultadoFinal,
                     nombreTema = nombreTema,
                     nombreRincon = nombreRincon,
-                    esRepaso = esRepaso
+                    esRepaso = esRepaso,
+                    viaRinconLibre = viaRinconLibre
                 )
             }
         }

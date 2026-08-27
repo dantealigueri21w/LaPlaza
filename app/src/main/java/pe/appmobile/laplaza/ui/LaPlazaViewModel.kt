@@ -23,6 +23,7 @@ import pe.appmobile.laplaza.domain.engine.MotorPregon
 import pe.appmobile.laplaza.domain.engine.MotorPuntajeAudiencia
 import pe.appmobile.laplaza.domain.model.DatosIntento
 import pe.appmobile.laplaza.domain.model.DiscursoArmado
+import pe.appmobile.laplaza.domain.model.IdRincon
 import pe.appmobile.laplaza.domain.model.Pregon
 import pe.appmobile.laplaza.domain.model.SugerenciaRepaso
 
@@ -156,20 +157,29 @@ class LaPlazaViewModel(private val repositorio: LaPlazaRepository) : ViewModel()
      * [resultado] deriva los 4 sub-puntajes 0..1 que espera Room (via
      * [MotorPuntajeAudiencia], la misma formula que ya usa el compuesto -- ver el
      * comentario de esa clase), registra el intento, genera el pregon real con
-     * [MotorPregon] (nunca inventado en la UI), lo guarda en el Cuaderno de Pregones, y
-     * marca el rincon del tema como completado.
+     * [MotorPregon] (nunca inventado en la UI), y marca el rincon del tema como
+     * completado.
      *
      * Decision de diseno: el rincon se marca completado en CUALQUIER declamacion
      * terminada con exito (no solo cuando los 3 temas del rincon ya se declamaron). Es
      * la lectura mas simple de la ficha que sigue atada a una accion real del nino -- la
      * ficha no fija de forma explicita cual de las dos lecturas es la correcta.
+     *
+     * [viaRinconLibre] (ver ficha, seccion "Rincon Libre"): "no hay insignia en juego por
+     * el resultado ni entrada nueva en el Cuaderno" -- asi que un intento asi SI se
+     * registra en Room (para racha, repaso, y la propia insignia Companero de Chirri),
+     * pero NO se guarda en el Cuaderno de Pregones ni cuenta para las otras 11 insignias
+     * (ver [pe.appmobile.laplaza.domain.engine.MotorInsignias]). El pregon igual se
+     * genera y se devuelve para que la pantalla muestre una reaccion real, solo que no
+     * persiste.
      */
     suspend fun finalizarDeclamacion(
         discurso: DiscursoArmado,
         resultado: ResultadoEnVivo,
         nombreTema: String,
         nombreRincon: String,
-        esRepaso: Boolean
+        esRepaso: Boolean,
+        viaRinconLibre: Boolean = false
     ): Pregon {
         val puntajeVolumen = MotorPuntajeAudiencia.calcularPuntajeVolumen(resultado.acustico.volumenPromedio)
         val puntajeEntonacion = MotorPuntajeAudiencia.calcularPuntajeEntonacion(resultado.acustico.variacionEntonacionSemitonos)
@@ -183,7 +193,8 @@ class LaPlazaViewModel(private val repositorio: LaPlazaRepository) : ViewModel()
             puntajeEntonacion = puntajeEntonacion,
             puntajeRitmo = puntajeRitmo,
             puntajeFluidez = puntajeFluidez,
-            puntajeCompuesto = resultado.puntaje.puntajeCompuesto
+            puntajeCompuesto = resultado.puntaje.puntajeCompuesto,
+            viaRinconLibre = viaRinconLibre
         )
 
         val pregon = MotorPregon.generar(
@@ -196,12 +207,26 @@ class LaPlazaViewModel(private val repositorio: LaPlazaRepository) : ViewModel()
                 puntajeFluidez = puntajeFluidez
             )
         )
-        repositorio.guardarPregon(intentoId, pregon)
+        if (!viaRinconLibre) {
+            repositorio.guardarPregon(intentoId, pregon)
+        }
 
         val rinconIdDeEseTema = repositorio.obtenerTema(discurso.temaId)?.rinconId
         if (rinconIdDeEseTema != null) {
             repositorio.marcarRinconCompletado(rinconIdDeEseTema)
         }
+
+        // Lectura fresca de Room (no del StateFlow rincones, que puede tardar un tick en
+        // reflejar el marcarRinconCompletado de arriba -- ver el comentario de
+        // LaPlazaRepositoryTest sobre por que no confiar en el StateFlow justo despues
+        // de escribir).
+        val rinconesCompletados = repositorio.obtenerRincones().first()
+            .filter { it.completado }
+            .map { IdRincon.valueOf(it.id) }
+            .toSet()
+        repositorio.evaluarYOtorgarInsignias(rinconesCompletados)
+
+        repositorio.actualizarRachaTrasActividad()
 
         return pregon
     }

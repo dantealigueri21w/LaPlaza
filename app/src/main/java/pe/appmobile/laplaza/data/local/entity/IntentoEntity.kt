@@ -23,5 +23,10 @@ data class IntentoEntity(
     val puntajeEntonacion: Float,
     val puntajeRitmo: Float,
     val puntajeFluidez: Float,
-    val puntajeCompuesto: Float
+    val puntajeCompuesto: Float,
+    /** true si esta declamacion se hizo desde el Rincon Libre -- la ficha dice que ahi
+     * "no hay insignia en juego por el resultado ni entrada nueva en el Cuaderno": este
+     * flag es lo que [pe.appmobile.laplaza.domain.engine.MotorInsignias] usa para
+     * excluir el intento de las insignias por resultado/hito. */
+    val viaRinconLibre: Boolean = false
 )

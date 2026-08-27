@@ -175,16 +175,22 @@ fun LaPlazaNavHost(
                 tituloRincon = tituloRincon,
                 temas = temas,
                 sugerenciaRepaso = sugerenciaRepaso,
-                onSeleccionarTema = { temaId -> navController.navigate(Rutas.armarDiscursoRuta(temaId)) },
+                onSeleccionarTema = { temaId ->
+                    navController.navigate(Rutas.armarDiscursoRuta(temaId, viaLibre = rinconId == Rutas.ID_RINCON_LIBRE))
+                },
                 onVolver = { navController.popBackStack() }
             )
         }
 
         composable(
             route = Rutas.ARMAR_DISCURSO,
-            arguments = listOf(navArgument(Rutas.ARG_TEMA_ID) { type = NavType.LongType })
+            arguments = listOf(
+                navArgument(Rutas.ARG_TEMA_ID) { type = NavType.LongType },
+                navArgument(Rutas.ARG_VIA_LIBRE) { type = NavType.BoolType }
+            )
         ) { backStackEntry ->
             val temaId = backStackEntry.arguments?.getLong(Rutas.ARG_TEMA_ID) ?: 0L
+            val viaLibre = backStackEntry.arguments?.getBoolean(Rutas.ARG_VIA_LIBRE) ?: false
 
             var bloques by remember(temaId) { mutableStateOf<List<BloqueContenidoEntity>>(emptyList()) }
             var tituloTema by remember(temaId) { mutableStateOf("") }
@@ -201,9 +207,11 @@ fun LaPlazaNavHost(
                     // prepararDeclamacion deja el DiscursoArmado listo ANTES de navegar:
                     // la ruta en si solo lleva el temaId (ver Rutas.declamacionRuta), la
                     // lista real de bloques elegidos viaja por el ViewModel (ver el
-                    // comentario de LaPlazaViewModel.prepararDeclamacion).
+                    // comentario de LaPlazaViewModel.prepararDeclamacion). viaLibre viaja
+                    // igual que llego a esta pantalla, sin volver a preguntar de donde
+                    // vino el tema.
                     viewModel.prepararDeclamacion(discurso)
-                    navController.navigate(Rutas.declamacionRuta(discurso.temaId))
+                    navController.navigate(Rutas.declamacionRuta(discurso.temaId, viaLibre))
                 },
                 onVolver = { navController.popBackStack() }
             )
@@ -211,13 +219,18 @@ fun LaPlazaNavHost(
 
         composable(
             route = Rutas.DECLAMACION,
-            arguments = listOf(navArgument(Rutas.ARG_TEMA_ID) { type = NavType.LongType })
+            arguments = listOf(
+                navArgument(Rutas.ARG_TEMA_ID) { type = NavType.LongType },
+                navArgument(Rutas.ARG_VIA_LIBRE) { type = NavType.BoolType }
+            )
         ) { backStackEntry ->
             val temaId = backStackEntry.arguments?.getLong(Rutas.ARG_TEMA_ID) ?: 0L
+            val viaLibre = backStackEntry.arguments?.getBoolean(Rutas.ARG_VIA_LIBRE) ?: false
 
             DeclamacionScreen(
                 viewModel = viewModel,
                 temaId = temaId,
+                viaRinconLibre = viaLibre,
                 // Vuelve hasta Home, no solo un popBackStack(): "sigue explorando" de la
                 // ficha calza mejor con dejar atras todo el camino de este rincon
                 // (seleccion de tema, armado, declamacion) que con quedar a mitad de
