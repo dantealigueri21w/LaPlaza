@@ -25,9 +25,21 @@ object MotorPuntajeAudiencia {
         }
     }
 
+    /** Sub-puntaje 0..1 de volumen, a partir del volumen promedio (RMS ya normalizado
+     * 0..1 por [pe.appmobile.laplaza.domain.engine.MotorAcustico]) de todo el intento.
+     * Extraído de [calcularPuntajeCompuesto] para que la pantalla de declamación pueda
+     * pedir el mismo sub-puntaje que ya usa el compuesto, sin duplicar la fórmula. */
+    fun calcularPuntajeVolumen(volumenPromedio: Float): Float = volumenPromedio.coerceIn(0f, 1f)
+
+    /** Sub-puntaje 0..1 de entonación, a partir de la variación (desviación estándar en
+     * semitonos) de todo el intento. Ver la nota de [calcularPuntajeVolumen]: misma razón
+     * de extracción. */
+    fun calcularPuntajeEntonacion(variacionEntonacionSemitonos: Float): Float =
+        (variacionEntonacionSemitonos / VARIACION_RICA_SEMITONOS).coerceIn(0f, 1f)
+
     fun calcularPuntajeCompuesto(resultado: ResultadoAcustico, fluidez: Float): PuntajeAudiencia {
-        val puntajeVolumen = resultado.volumenPromedio.coerceIn(0f, 1f)
-        val puntajeEntonacion = (resultado.variacionEntonacionSemitonos / VARIACION_RICA_SEMITONOS).coerceIn(0f, 1f)
+        val puntajeVolumen = calcularPuntajeVolumen(resultado.volumenPromedio)
+        val puntajeEntonacion = calcularPuntajeEntonacion(resultado.variacionEntonacionSemitonos)
         val puntajeRitmo = calcularPuntajeRitmo(resultado.ritmoSilabasPorMinuto)
         val compuesto = (puntajeVolumen * 0.3f + puntajeEntonacion * 0.25f + puntajeRitmo * 0.2f + fluidez.coerceIn(0f, 1f) * 0.25f)
             .coerceIn(0f, 1f)

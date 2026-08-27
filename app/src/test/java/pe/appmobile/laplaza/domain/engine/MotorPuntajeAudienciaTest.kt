@@ -29,6 +29,43 @@ class MotorPuntajeAudienciaTest {
     }
 
     @Test
+    fun `calcularPuntajeVolumen con volumen maximo da 1`() {
+        assertEquals(1f, MotorPuntajeAudiencia.calcularPuntajeVolumen(1f), 0.001f)
+    }
+
+    @Test
+    fun `calcularPuntajeVolumen con volumen cero da 0`() {
+        assertEquals(0f, MotorPuntajeAudiencia.calcularPuntajeVolumen(0f), 0.001f)
+    }
+
+    @Test
+    fun `calcularPuntajeVolumen recorta valores fuera de 0 a 1`() {
+        assertEquals(1f, MotorPuntajeAudiencia.calcularPuntajeVolumen(1.5f), 0.001f)
+        assertEquals(0f, MotorPuntajeAudiencia.calcularPuntajeVolumen(-0.3f), 0.001f)
+    }
+
+    @Test
+    fun `calcularPuntajeEntonacion con variacion rica da 1`() {
+        assertEquals(1f, MotorPuntajeAudiencia.calcularPuntajeEntonacion(6f), 0.001f)
+    }
+
+    @Test
+    fun `calcularPuntajeEntonacion con variacion nula da 0`() {
+        assertEquals(0f, MotorPuntajeAudiencia.calcularPuntajeEntonacion(0f), 0.001f)
+    }
+
+    @Test
+    fun `calcularPuntajeEntonacion con variacion parcial da un valor intermedio`() {
+        assertEquals(0.5f, MotorPuntajeAudiencia.calcularPuntajeEntonacion(3f), 0.001f)
+    }
+
+    @Test
+    fun `calcularPuntajeEntonacion recorta valores fuera de 0 a 1`() {
+        assertEquals(1f, MotorPuntajeAudiencia.calcularPuntajeEntonacion(50f), 0.001f)
+        assertEquals(0f, MotorPuntajeAudiencia.calcularPuntajeEntonacion(-2f), 0.001f)
+    }
+
+    @Test
     fun `calcularPuntajeRitmo dentro del rango ideal da 1`() {
         assertEquals(1f, MotorPuntajeAudiencia.calcularPuntajeRitmo(120f), 0.001f)
     }

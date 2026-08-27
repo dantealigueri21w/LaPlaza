@@ -8,10 +8,10 @@ package pe.appmobile.laplaza.ui.navigation
  * Los 7 rincones y el Rincon Libre comparten una sola ruta parametrizada ([RINCON]),
  * cuyo destino real es [TemasDeRinconScreen][pe.appmobile.laplaza.ui.screens.TemasDeRinconScreen]
  * (la seleccion de tema). Elegir un tema navega a [ARMAR_DISCURSO], el tablero real de
- * armado del discurso (gancho/cuerpo/cierre). El Cuaderno de Pregones y la declamacion
- * en si ([DECLAMAR_PROXIMAMENTE]) siguen siendo el destino marcador (ver
- * ui/screens/PantallaMarcador.kt); una tarea posterior reemplaza cada uno por su
- * contenido real.
+ * armado del discurso (gancho/cuerpo/cierre), que a su vez navega a [DECLAMACION] -la
+ * mecanica nucleo: microfono real, indicador en vivo y pregon real. El Cuaderno de
+ * Pregones sigue siendo el destino marcador (ver ui/screens/PantallaMarcador.kt); una
+ * tarea posterior lo reemplaza por su contenido real.
  */
 object Rutas {
     const val CREAR_PERFIL = "crear_perfil"
@@ -34,8 +34,14 @@ object Rutas {
 
     fun armarDiscursoRuta(temaId: Long): String = "armar/$temaId"
 
-    /** Destino marcador para la declamacion real (mic/Chirri/plaza), que es una tarea
-     * posterior: [ArmarDiscursoScreen][pe.appmobile.laplaza.ui.screens.ArmarDiscursoScreen]
-     * navega aqui al terminar de armar un discurso valido. */
-    const val DECLAMAR_PROXIMAMENTE = "declamar_proximamente"
+    /** La pantalla de declamacion real (microfono, indicador en vivo, pregon). El
+     * discurso armado en si no viaja por la ruta -Navigation Compose solo pasa
+     * primitivos- sino por [pe.appmobile.laplaza.ui.LaPlazaViewModel.prepararDeclamacion],
+     * llamado justo antes de navegar aqui; esta pantalla solo necesita [ARG_TEMA_ID] para
+     * saber a que tema pertenece (por ejemplo, para volver a cargar datos si el proceso
+     * murio entre medio). Reutiliza [ARG_TEMA_ID], el mismo nombre de argumento que
+     * [ARMAR_DISCURSO]. */
+    const val DECLAMACION = "declamacion/{$ARG_TEMA_ID}"
+
+    fun declamacionRuta(temaId: Long): String = "declamacion/$temaId"
 }

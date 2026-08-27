@@ -35,6 +35,7 @@ import pe.appmobile.laplaza.ui.components.EstadoChirri
 import pe.appmobile.laplaza.ui.screens.AjustesScreen
 import pe.appmobile.laplaza.ui.screens.ArmarDiscursoScreen
 import pe.appmobile.laplaza.ui.screens.CrearPerfilScreen
+import pe.appmobile.laplaza.ui.screens.DeclamacionScreen
 import pe.appmobile.laplaza.ui.screens.HomeScreen
 import pe.appmobile.laplaza.ui.screens.PantallaMarcador
 import pe.appmobile.laplaza.ui.screens.PerfilScreen
@@ -196,19 +197,32 @@ fun LaPlazaNavHost(
             ArmarDiscursoScreen(
                 tituloTema = tituloTema,
                 bloques = bloques,
-                // No hay pantalla de declamacion todavia (mic/Chirri/plaza es una tarea
-                // posterior): navegar al marcador con este titulo deja claro que el
-                // discurso SI se armo bien -- MotorDiscurso.validar ya lo confirmo -- y que
-                // falta es la declamacion en si, no el armado.
-                onDeclamar = { navController.navigate(Rutas.DECLAMAR_PROXIMAMENTE) },
+                onDeclamar = { discurso ->
+                    // prepararDeclamacion deja el DiscursoArmado listo ANTES de navegar:
+                    // la ruta en si solo lleva el temaId (ver Rutas.declamacionRuta), la
+                    // lista real de bloques elegidos viaja por el ViewModel (ver el
+                    // comentario de LaPlazaViewModel.prepararDeclamacion).
+                    viewModel.prepararDeclamacion(discurso)
+                    navController.navigate(Rutas.declamacionRuta(discurso.temaId))
+                },
                 onVolver = { navController.popBackStack() }
             )
         }
 
-        composable(Rutas.DECLAMAR_PROXIMAMENTE) {
-            PantallaMarcador(
-                titulo = stringResource(R.string.declamar_proximamente_titulo),
-                onVolver = { navController.popBackStack() }
+        composable(
+            route = Rutas.DECLAMACION,
+            arguments = listOf(navArgument(Rutas.ARG_TEMA_ID) { type = NavType.LongType })
+        ) { backStackEntry ->
+            val temaId = backStackEntry.arguments?.getLong(Rutas.ARG_TEMA_ID) ?: 0L
+
+            DeclamacionScreen(
+                viewModel = viewModel,
+                temaId = temaId,
+                // Vuelve hasta Home, no solo un popBackStack(): "sigue explorando" de la
+                // ficha calza mejor con dejar atras todo el camino de este rincon
+                // (seleccion de tema, armado, declamacion) que con quedar a mitad de
+                // camino en la lista de temas.
+                onContinuar = { navController.popBackStack(Rutas.HOME, false) }
             )
         }
     }

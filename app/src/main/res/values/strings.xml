@@ -38,11 +38,10 @@
     <string name="ajustes_sonido">Sonido</string>
     <string name="ajustes_volver">Volver</string>
 
-    <!-- Pantallas marcador (Cuaderno de Pregones y declamacion, contenido real en otra tarea) -->
+    <!-- Pantallas marcador (Cuaderno de Pregones, contenido real en otra tarea) -->
     <string name="marcador_mensaje">Aquí vas a armar y decir tu propio discurso muy pronto. ¡Chirri todavía está terminando de prepararlo!</string>
     <string name="cuaderno_titulo">Cuaderno de Pregones</string>
     <string name="accion_volver">Volver</string>
-    <string name="declamar_proximamente_titulo">Declamar (próximamente)</string>
 
     <!-- Temas de un rincón (selección de tema a declamar) -->
     <string name="temas_rincon_tema_descripcion">%1$s, dificultad %2$s</string>
@@ -56,5 +55,23 @@
     <string name="armar_discurso_declamar">Declamar</string>
     <string name="armar_discurso_seleccionado">seleccionado</string>
     <string name="armar_discurso_no_seleccionado">sin seleccionar</string>
+
+    <!-- Declamación (mecánica núcleo: micrófono real, indicador en vivo, pregón) -->
+    <string name="declamacion_cargando_descripcion">Cargando tu discurso</string>
+    <string name="declamacion_discurso_descripcion">Tu discurso, para leerlo en voz alta</string>
+    <string name="declamacion_hablar">Hablar</string>
+    <string name="declamacion_terminar">Terminar</string>
+    <string name="declamacion_continuar">Continuar</string>
+    <string name="declamacion_calibrando_texto">Respira hondo… Chirri está preparando la plaza para escucharte</string>
+    <string name="declamacion_calibrando_descripcion">Preparando la plaza, respira hondo</string>
+    <string name="declamacion_indicador_nivel_distraida">La plaza está algo distraída, ¡anímate a subir la voz!</string>
+    <string name="declamacion_indicador_nivel_atenta">La plaza te está escuchando con atención</string>
+    <string name="declamacion_indicador_nivel_entusiasmada">¡La plaza está encantada contigo!</string>
+    <string name="declamacion_publico_descripcion">El público de la plaza reacciona a tu voz</string>
+    <string name="declamacion_ensayo_explicacion">Esta vez no pudimos usar el micrófono. Mantén presionado este círculo mientras hablas fuerte y firme, como si estuvieras en la plaza de verdad.</string>
+    <string name="declamacion_ensayo_boton_descripcion">Mantén presionado mientras hablas, para practicar sin micrófono</string>
+    <string name="declamacion_ensayo_sosteniendo_descripcion">Sigue sosteniendo y hablando fuerte</string>
+    <string name="declamacion_guardando_descripcion">Guardando tu pregón</string>
+    <string name="declamacion_pregon_descripcion">Tu pregón: %1$s</string>
 
 </resources>
