@@ -11,7 +11,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import pe.appmobile.laplaza.data.local.entity.InsigniaEntity
 import pe.appmobile.laplaza.data.local.entity.PerfilEntity
+import pe.appmobile.laplaza.data.seed.SemillaInsignias
 import pe.appmobile.laplaza.ui.theme.LaPlazaTheme
 
 /**
@@ -77,5 +79,48 @@ class PerfilScreenTest {
         compose.waitForIdle()
 
         assertEquals(6, avatarGuardado)
+    }
+
+    // ---------- Mis Insignias ----------
+
+    private fun insigniasDeMentira(ganadas: Set<String> = emptySet()) = SemillaInsignias.insignias.map { semilla ->
+        semilla.copy(fechaObtenidaEpochMs = if (semilla.id in ganadas) 1000L else null)
+    }
+
+    @Test
+    fun `muestra las 12 insignias reales de la ficha, con su nombre`() {
+        compose.setContent {
+            LaPlazaTheme {
+                PerfilScreen(
+                    perfil = perfilDeMentira,
+                    insignias = insigniasDeMentira(),
+                    onGuardar = { _, _ -> },
+                    onVolver = {}
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        SemillaInsignias.insignias.forEach { insignia ->
+            compose.onNodeWithText(insignia.nombre).assertExists()
+        }
+    }
+
+    @Test
+    fun `una insignia ganada y una por ganar tienen descripciones distintas, no solo distinto color`() {
+        compose.setContent {
+            LaPlazaTheme {
+                PerfilScreen(
+                    perfil = perfilDeMentira,
+                    insignias = insigniasDeMentira(ganadas = setOf("PRIMERA_VOZ")),
+                    onGuardar = { _, _ -> },
+                    onVolver = {}
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithContentDescription("Primera Voz, ganada", substring = true).assertExists()
+        compose.onNodeWithContentDescription("Gancho que Prende, todavía por ganar", substring = true).assertExists()
     }
 }

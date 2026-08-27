@@ -41,6 +41,14 @@ import pe.appmobile.laplaza.R
 import pe.appmobile.laplaza.data.local.entity.PerfilEntity
 import pe.appmobile.laplaza.data.local.entity.RachaEntity
 import pe.appmobile.laplaza.data.local.entity.RinconEntity
+import pe.appmobile.laplaza.ui.art.IlustracionRinconBalcon
+import pe.appmobile.laplaza.ui.art.IlustracionRinconFuente
+import pe.appmobile.laplaza.ui.art.IlustracionRinconJardin
+import pe.appmobile.laplaza.ui.art.IlustracionRinconKiosco
+import pe.appmobile.laplaza.ui.art.IlustracionRinconLibre
+import pe.appmobile.laplaza.ui.art.IlustracionRinconMirador
+import pe.appmobile.laplaza.ui.art.IlustracionRinconMostrador
+import pe.appmobile.laplaza.ui.art.IlustracionRinconTarimaMayor
 import pe.appmobile.laplaza.ui.components.AvatarDePlaza
 import pe.appmobile.laplaza.ui.components.BotonDePlaza
 import pe.appmobile.laplaza.ui.navigation.Rutas
@@ -272,6 +280,9 @@ private fun ZonaDeRincon(zona: ZonaPlaza, onClick: () -> Unit, modifier: Modifie
             enabled = true,
             descripcion = "${zona.nombre}, $estadoTexto"
         )
+        Box(modifier = Modifier.align(Alignment.TopStart).padding(6.dp)) {
+            SimboloDeZona(zona.id)
+        }
         if (zona.completado) {
             Box(
                 modifier = Modifier
@@ -289,6 +300,23 @@ private fun ZonaDeRincon(zona: ZonaPlaza, onClick: () -> Unit, modifier: Modifie
                 )
             }
         }
+    }
+}
+
+/** El simbolo propio de cada zona (ver ui/art/RinconesArt.kt) -- decorativo, el nombre y
+ * estado real ya los lee un lector de pantalla desde la descripcion de [BotonDePlaza]
+ * arriba, asi que este icono no necesita su propia semantica (seccion 6 del maestro). */
+@Composable
+private fun SimboloDeZona(rinconId: String) {
+    when (rinconId) {
+        "BALCON" -> IlustracionRinconBalcon()
+        "KIOSCO" -> IlustracionRinconKiosco()
+        "MOSTRADOR" -> IlustracionRinconMostrador()
+        "JARDIN" -> IlustracionRinconJardin()
+        "FUENTE" -> IlustracionRinconFuente()
+        "MIRADOR" -> IlustracionRinconMirador()
+        "TARIMA_MAYOR" -> IlustracionRinconTarimaMayor()
+        Rutas.ID_RINCON_LIBRE -> IlustracionRinconLibre()
     }
 }
 

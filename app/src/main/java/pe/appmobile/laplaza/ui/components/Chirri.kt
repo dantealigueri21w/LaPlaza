@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -163,11 +164,28 @@ private fun DrawScope.dibujarChirri(p: ParametrosChirri) {
     val contorno = IndigoProfundo
     val grosor = size.minDimension * 0.012f
 
+    // sombra de contacto: Chirri "flota" un poco sobre el suelo de la piedra, seccion
+    // 4.0 del maestro exige profundidad en cualquier elemento asi.
+    drawOval(
+        color = IndigoProfundo.copy(alpha = 0.18f),
+        topLeft = Offset(centroCuerpo.x - radioCuerpo * 1.05f, centroCuerpo.y + radioCuerpo * 0.75f),
+        size = Size(radioCuerpo * 2.1f, radioCuerpo * 0.5f)
+    )
+
     dibujarPatas(centroCuerpo, radioCuerpo, contorno, grosor)
     dibujarAntenas(centroCabeza, radioCabeza, p.anguloAntenaIzquierda, p.anguloAntenaDerecha, contorno, grosor)
 
-    // cuerpo (abdomen), con un parche claro de vientre para dar volumen sin degradados
-    drawCircle(color = VioletaAtardecer, radius = radioCuerpo, center = centroCuerpo)
+    // cuerpo (abdomen): degradado radial en vez de color solido para dar volumen real,
+    // mas el parche claro de vientre encima.
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(VioletaAtardecer.copy(alpha = 0.75f), VioletaAtardecer),
+            center = centroCuerpo - Offset(radioCuerpo * 0.3f, radioCuerpo * 0.3f),
+            radius = radioCuerpo * 1.6f
+        ),
+        radius = radioCuerpo,
+        center = centroCuerpo
+    )
     drawCircle(color = contorno, radius = radioCuerpo, center = centroCuerpo, style = Stroke(width = grosor))
     drawOval(
         color = BlancoRosado,
@@ -175,8 +193,17 @@ private fun DrawScope.dibujarChirri(p: ParametrosChirri) {
         size = Size(radioCuerpo * 0.9f, radioCuerpo * 0.85f)
     )
 
-    // cabeza, encima del cuerpo y encima de la base de las antenas
-    drawCircle(color = VioletaAtardecer, radius = radioCabeza, center = centroCabeza)
+    // cabeza, encima del cuerpo y encima de la base de las antenas -- mismo degradado
+    // que el cuerpo, mismo bloque de estilo (seccion 4.0).
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(VioletaAtardecer.copy(alpha = 0.75f), VioletaAtardecer),
+            center = centroCabeza - Offset(radioCabeza * 0.3f, radioCabeza * 0.3f),
+            radius = radioCabeza * 1.6f
+        ),
+        radius = radioCabeza,
+        center = centroCabeza
+    )
     drawCircle(color = contorno, radius = radioCabeza, center = centroCabeza, style = Stroke(width = grosor))
 
     dibujarOjos(centroCabeza, radioCabeza, p.aperturaOjos)

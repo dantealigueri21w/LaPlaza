@@ -106,10 +106,12 @@ fun LaPlazaNavHost(
 
         composable(Rutas.PERFIL) {
             val perfil by viewModel.perfil.collectAsState()
+            val insignias by viewModel.insignias.collectAsState()
             val perfilActual = perfil
             if (perfilActual != null) {
                 PerfilScreen(
                     perfil = perfilActual,
+                    insignias = insignias,
                     onGuardar = { alias, avatarId ->
                         scope.launch {
                             viewModel.actualizarPerfil(perfilActual.copy(alias = alias, avatarId = avatarId))

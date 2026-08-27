@@ -32,6 +32,9 @@
     <string name="perfil_elige_avatar">Tu cara en la plaza</string>
     <string name="perfil_guardar">Guardar</string>
     <string name="perfil_volver">Volver</string>
+    <string name="perfil_insignias_titulo">Tus insignias</string>
+    <string name="perfil_insignia_ganada">ganada</string>
+    <string name="perfil_insignia_por_ganar">todavía por ganar</string>
 
     <!-- Ajustes -->
     <string name="ajustes_titulo">Ajustes</string>

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pe.appmobile.laplaza.audio.ResultadoEnVivo
 import pe.appmobile.laplaza.data.local.entity.BloqueContenidoEntity
+import pe.appmobile.laplaza.data.local.entity.InsigniaEntity
 import pe.appmobile.laplaza.data.local.entity.PerfilEntity
 import pe.appmobile.laplaza.data.local.entity.PregonEntity
 import pe.appmobile.laplaza.data.local.entity.RachaEntity
@@ -65,6 +66,11 @@ class LaPlazaViewModel(private val repositorio: LaPlazaRepository) : ViewModel()
     /** El Cuaderno de Pregones real, del titular mas reciente al mas antiguo (ver
      * PregonDao.obtenerTodos) -- Eagerly por la misma razon que [rincones] y [racha]. */
     val pregones: StateFlow<List<PregonEntity>> = repositorio.obtenerPregones()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Las 12 insignias reales, ganadas o no (ver InsigniaEntity.fechaObtenidaEpochMs) --
+     * Eagerly por la misma razon que [rincones]. */
+    val insignias: StateFlow<List<InsigniaEntity>> = repositorio.obtenerInsignias()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _semillaLista = MutableStateFlow(false)
