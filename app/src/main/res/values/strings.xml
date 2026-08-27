@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Pantalla de carga inicial, antes de saber si ya existe un perfil -->
+    <string name="cargando_descripcion">Cargando la plaza</string>
+
+    <!-- Creación de perfil (primer arranque) -->
+    <string name="crear_perfil_saludo">Yo canto bajito porque una vez todos se voltearon a mirarme. ¿Me ayudas a practicar? Primero cuéntame cómo te digo.</string>
+    <string name="crear_perfil_titulo">¿Cómo te llamamos en la plaza?</string>
+    <string name="crear_perfil_hint_alias">Un apodo, no tu nombre real</string>
+    <string name="crear_perfil_elige_avatar">Elige tu cara para la plaza</string>
+    <string name="crear_perfil_confirmar">¡Listo, vamos a la plaza!</string>
+
+    <!-- Avatares (compartido entre creación de perfil, perfil y home) -->
+    <string name="avatar_descripcion">Avatar %1$d</string>
+    <string name="avatar_elegido_sufijo">, elegido</string>
+
+    <!-- Home (mapa de la plaza) -->
+    <string name="home_estado_completado">completado</string>
+    <string name="home_estado_disponible">disponible</string>
+    <string name="home_racha_texto">%1$d días seguidos</string>
+    <string name="home_rincon_libre">Rincón Libre</string>
+    <string name="home_ir_perfil">Ir a tu perfil</string>
+    <string name="home_ir_ajustes">Ir a ajustes</string>
+    <string name="home_ir_cuaderno">Ir al Cuaderno de Pregones</string>
+    <string name="home_plaza_descripcion">La plaza de tu pueblo, vista desde arriba. Toca un rincón para entrar.</string>
+    <string name="home_avatar_descripcion">Tu avatar, %1$s</string>
+
+    <!-- Perfil -->
+    <string name="perfil_titulo">Tu perfil</string>
+    <string name="perfil_editar_alias">Tu apodo</string>
+    <string name="perfil_elige_avatar">Tu cara en la plaza</string>
+    <string name="perfil_guardar">Guardar</string>
+    <string name="perfil_volver">Volver</string>
+
+    <!-- Ajustes -->
+    <string name="ajustes_titulo">Ajustes</string>
+    <string name="ajustes_sonido">Sonido</string>
+    <string name="ajustes_volver">Volver</string>
+
+    <!-- Pantallas marcador (rincones y Cuaderno de Pregones, contenido real en otra tarea) -->
+    <string name="marcador_mensaje">Aquí vas a armar y decir tu propio discurso muy pronto. ¡Chirri todavía está terminando de prepararlo!</string>
+    <string name="cuaderno_titulo">Cuaderno de Pregones</string>
+    <string name="accion_volver">Volver</string>
+
+</resources>

@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
+        android:name=".LaPlazaApplication"
         android:allowBackup="false"
         android:label="La Plaza"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
