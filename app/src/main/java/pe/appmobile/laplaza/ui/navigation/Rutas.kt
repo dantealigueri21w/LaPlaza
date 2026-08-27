@@ -12,6 +12,7 @@ package pe.appmobile.laplaza.ui.navigation
  * mecanica nucleo: microfono real, indicador en vivo y pregon real.
  */
 object Rutas {
+    const val ONBOARDING = "onboarding"
     const val CREAR_PERFIL = "crear_perfil"
     const val HOME = "home"
     const val PERFIL = "perfil"

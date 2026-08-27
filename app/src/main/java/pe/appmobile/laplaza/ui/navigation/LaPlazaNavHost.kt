@@ -38,6 +38,7 @@ import pe.appmobile.laplaza.ui.screens.CrearPerfilScreen
 import pe.appmobile.laplaza.ui.screens.CuadernoDePregonesScreen
 import pe.appmobile.laplaza.ui.screens.DeclamacionScreen
 import pe.appmobile.laplaza.ui.screens.HomeScreen
+import pe.appmobile.laplaza.ui.screens.OnboardingScreen
 import pe.appmobile.laplaza.ui.screens.PerfilScreen
 import pe.appmobile.laplaza.ui.screens.TemasDeRinconScreen
 import pe.appmobile.laplaza.ui.theme.BlancoRosado
@@ -70,9 +71,23 @@ fun LaPlazaNavHost(
 
     val scope = rememberCoroutineScope()
     val perfilInicial by viewModel.perfil.collectAsState()
-    val destinoInicial = if (perfilInicial == null) Rutas.CREAR_PERFIL else Rutas.HOME
+    // El onboarding (proposito, mundo, como avanzar) precede a crear-perfil en el primer
+    // arranque; no necesita su propio flag "ya se vio" -- ver el comentario de
+    // OnboardingScreen: una vez que existe un perfil, este destino nunca se vuelve a
+    // pedir como pantalla inicial.
+    val destinoInicial = if (perfilInicial == null) Rutas.ONBOARDING else Rutas.HOME
 
     NavHost(navController = navController, startDestination = destinoInicial, modifier = modifier) {
+        composable(Rutas.ONBOARDING) {
+            OnboardingScreen(
+                onTerminar = {
+                    navController.navigate(Rutas.CREAR_PERFIL) {
+                        popUpTo(Rutas.ONBOARDING) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(Rutas.CREAR_PERFIL) {
             CrearPerfilScreen(
                 onCrear = { alias, avatarId ->

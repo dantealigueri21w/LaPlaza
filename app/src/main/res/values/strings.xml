@@ -4,6 +4,14 @@
     <!-- Pantalla de carga inicial, antes de saber si ya existe un perfil -->
     <string name="cargando_descripcion">Cargando la plaza</string>
 
+    <!-- Onboarding (primer arranque, antes de crear perfil) -->
+    <string name="onboarding_siguiente">Siguiente</string>
+    <string name="onboarding_empezar">¡Vamos a la plaza!</string>
+    <string name="onboarding_proposito_texto">En La Plaza armas tus propios discursos y los dices en voz alta, de verdad. Cada vez que hablas, algo en la plaza cambia.</string>
+    <string name="onboarding_mundo_texto">Vivo bajo una piedra suelta, al borde de la plaza. A mí también se me corta la voz a veces, así que practico contigo, no desde arriba. Estos son los rincones de la plaza:</string>
+    <string name="onboarding_avanzar_texto">En cada rincón armas tu discurso con un gancho, una idea y un cierre. Después lo dices en voz alta y la plaza reacciona contigo.</string>
+    <string name="onboarding_microfono_texto">Cuando estés listo para hablar, te vamos a pedir usar el micrófono. Nunca se guarda lo que dices, solo cómo lo dices.</string>
+
     <!-- Creación de perfil (primer arranque) -->
     <string name="crear_perfil_saludo">Yo canto bajito porque una vez todos se voltearon a mirarme. ¿Me ayudas a practicar? Primero cuéntame cómo te digo.</string>
     <string name="crear_perfil_titulo">¿Cómo te llamamos en la plaza?</string>
