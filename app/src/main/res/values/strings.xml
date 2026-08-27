@@ -38,10 +38,12 @@
     <string name="ajustes_sonido">Sonido</string>
     <string name="ajustes_volver">Volver</string>
 
-    <!-- Pantallas marcador (Cuaderno de Pregones, contenido real en otra tarea) -->
-    <string name="marcador_mensaje">Aquí vas a armar y decir tu propio discurso muy pronto. ¡Chirri todavía está terminando de prepararlo!</string>
+    <!-- Cuaderno de Pregones -->
     <string name="cuaderno_titulo">Cuaderno de Pregones</string>
     <string name="accion_volver">Volver</string>
+    <string name="cuaderno_vacio_mensaje">Tu cuaderno todavía está en blanco. ¡Cuenta tu primer discurso frente a la plaza y Chirri escribirá la primera página!</string>
+    <string name="cuaderno_vacio_descripcion">El Cuaderno de Pregones está vacío por ahora</string>
+    <string name="cuaderno_pagina_descripcion">%1$s. Página del %2$s</string>
 
     <!-- Temas de un rincón (selección de tema a declamar) -->
     <string name="temas_rincon_tema_descripcion">%1$s, dificultad %2$s</string>

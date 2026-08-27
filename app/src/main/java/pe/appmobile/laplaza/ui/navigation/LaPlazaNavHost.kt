@@ -35,9 +35,9 @@ import pe.appmobile.laplaza.ui.components.EstadoChirri
 import pe.appmobile.laplaza.ui.screens.AjustesScreen
 import pe.appmobile.laplaza.ui.screens.ArmarDiscursoScreen
 import pe.appmobile.laplaza.ui.screens.CrearPerfilScreen
+import pe.appmobile.laplaza.ui.screens.CuadernoDePregonesScreen
 import pe.appmobile.laplaza.ui.screens.DeclamacionScreen
 import pe.appmobile.laplaza.ui.screens.HomeScreen
-import pe.appmobile.laplaza.ui.screens.PantallaMarcador
 import pe.appmobile.laplaza.ui.screens.PerfilScreen
 import pe.appmobile.laplaza.ui.screens.TemasDeRinconScreen
 import pe.appmobile.laplaza.ui.theme.BlancoRosado
@@ -45,8 +45,7 @@ import pe.appmobile.laplaza.ui.theme.BlancoRosado
 /**
  * El grafo de navegacion de las 12 pantallas de la ficha (7 rincones + Rincon Libre +
  * home + Cuaderno de Pregones + perfil + ajustes) mas la creacion de perfil de primer
- * arranque. Solo home, perfil y ajustes tienen contenido real en esta tarea; el resto son
- * destinos marcador (ver [PantallaMarcador]) que una tarea posterior reemplaza uno por uno.
+ * arranque.
  *
  * [navController] es un parametro con valor por defecto (no algo que la app real necesite
  * pasar nunca) solo para que las pruebas puedan inspeccionar la navegacion real despues
@@ -139,8 +138,9 @@ fun LaPlazaNavHost(
         }
 
         composable(Rutas.CUADERNO_DE_PREGONES) {
-            PantallaMarcador(
-                titulo = stringResource(R.string.cuaderno_titulo),
+            val pregones by viewModel.pregones.collectAsState()
+            CuadernoDePregonesScreen(
+                pregones = pregones,
                 onVolver = { navController.popBackStack() }
             )
         }

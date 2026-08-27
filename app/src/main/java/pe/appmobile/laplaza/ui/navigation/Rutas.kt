@@ -9,9 +9,7 @@ package pe.appmobile.laplaza.ui.navigation
  * cuyo destino real es [TemasDeRinconScreen][pe.appmobile.laplaza.ui.screens.TemasDeRinconScreen]
  * (la seleccion de tema). Elegir un tema navega a [ARMAR_DISCURSO], el tablero real de
  * armado del discurso (gancho/cuerpo/cierre), que a su vez navega a [DECLAMACION] -la
- * mecanica nucleo: microfono real, indicador en vivo y pregon real. El Cuaderno de
- * Pregones sigue siendo el destino marcador (ver ui/screens/PantallaMarcador.kt); una
- * tarea posterior lo reemplaza por su contenido real.
+ * mecanica nucleo: microfono real, indicador en vivo y pregon real.
  */
 object Rutas {
     const val CREAR_PERFIL = "crear_perfil"
