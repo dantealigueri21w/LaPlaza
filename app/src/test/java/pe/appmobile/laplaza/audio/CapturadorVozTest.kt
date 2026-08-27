@@ -1,5 +1,7 @@
 package pe.appmobile.laplaza.audio
 
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -196,6 +198,90 @@ class CapturadorVozTest {
         assertTrue(capturador.estado.value is EstadoCapturaEnVivo.Detenido)
         assertTrue(fuente.liberada)
     }
+
+    /**
+     * Reproduce, con hilos reales (no [Dispatchers.Unconfined]), el bug real encontrado
+     * jugando la app en un emulador (seccion 10.3 del maestro): tocar "Terminar" no
+     * hacia nada, una y otra vez. Causa real: [CapturadorVoz.detener] pone el estado en
+     * `Detenido` desde el hilo llamador, pero si la corrutina de fondo ya estaba a mitad
+     * de leer un bloque, termina esa lectura DESPUES y sobreescribe `Detenido` de vuelta
+     * a `Escuchando` -- una carrera de dos escritores sobre el mismo StateFlow, invisible
+     * en las pruebas de arriba porque todas usan `Dispatchers.Unconfined` (todo corre en
+     * un solo hilo, sin carrera posible).
+     */
+    @Test
+    fun `detener mientras un bloque esta a mitad de lectura no deja que ese bloque revierta el estado a Escuchando`() {
+        val leyendoElBloqueEnVuelo = CountDownLatch(1)
+        val puedeTerminarDeLeerlo = CountDownLatch(1)
+        val fuente = FuenteDeAudioQueBloqueaEnLaSegundaLlamada(
+            sampleRateHz = sampleRate,
+            bloques = mutableListOf(generarSilencioDigital(100), generarSenoidal(220.0, 100, amplitud = 0.8)),
+            avisaQueEstaLeyendo = leyendoElBloqueEnVuelo,
+            esperaHastaQuePuedaContinuar = puedeTerminarDeLeerlo
+        )
+        // duracionCalibracionMs = duracionBloqueMs: la calibracion consume exactamente 1
+        // bloque (la primera llamada a leerSiguienteBloque, que no bloquea) y pasa a
+        // Escuchando; la SEGUNDA llamada -ya dentro de procesarSiguienteBloque- es la que
+        // el fake deja a medio camino.
+        val capturador = CapturadorVoz(
+            fuente = fuente,
+            scope = CoroutineScope(Job() + Dispatchers.IO),
+            dispatcher = Dispatchers.IO,
+            duracionBloqueMs = 100L,
+            duracionCalibracionMs = 100L
+        )
+
+        capturador.iniciar()
+        assertTrue(
+            "el bloque en vuelo no empezo a leerse a tiempo",
+            leyendoElBloqueEnVuelo.await(2, TimeUnit.SECONDS)
+        )
+
+        // En este punto, calibrar() ya publico Escuchando y la corrutina de fondo esta
+        // bloqueada a mitad de su SEGUNDA lectura. detener() corre en este hilo (el de la
+        // prueba), como si fuera el hilo de UI tocando "Terminar".
+        capturador.detener()
+        assertTrue(
+            "detener() debe dejar el estado en Detenido de inmediato",
+            capturador.estado.value is EstadoCapturaEnVivo.Detenido
+        )
+
+        // Se libera el bloque que estaba en vuelo: sin el guard contra la carrera, su
+        // callback tardio pisaria el Detenido de arriba con un nuevo Escuchando.
+        puedeTerminarDeLeerlo.countDown()
+
+        val limite = System.currentTimeMillis() + 300
+        while (System.currentTimeMillis() < limite) {
+            Thread.sleep(20)
+        }
+        assertTrue(
+            "un bloque que ya estaba en vuelo antes de detener() no debe revertir el estado a Escuchando",
+            capturador.estado.value is EstadoCapturaEnVivo.Detenido
+        )
+    }
+}
+
+/** Como [FuenteDeAudioFalsa], pero su segunda llamada a [leerSiguienteBloque] se queda
+ * bloqueada hasta que la prueba la libere -para poder orquestar con precision una
+ * llamada a [CapturadorVoz.detener] justo mientras esa lectura esta en vuelo. */
+private class FuenteDeAudioQueBloqueaEnLaSegundaLlamada(
+    override val sampleRateHz: Int,
+    private val bloques: MutableList<ShortArray>,
+    private val avisaQueEstaLeyendo: CountDownLatch,
+    private val esperaHastaQuePuedaContinuar: CountDownLatch
+) : FuenteDeAudio {
+    private var llamada = 0
+
+    override fun leerSiguienteBloque(): ShortArray {
+        llamada++
+        if (llamada == 2) {
+            avisaQueEstaLeyendo.countDown()
+            esperaHastaQuePuedaContinuar.await()
+        }
+        return if (bloques.isNotEmpty()) bloques.removeAt(0) else ShortArray(0)
+    }
+
+    override fun liberar() = Unit
 }
 
 /** Fuente de audio falsa para pruebas: entrega bloques predefinidos en orden y señala el fin

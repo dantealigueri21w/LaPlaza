@@ -68,6 +68,7 @@
     <string name="armar_discurso_declamar">Declamar</string>
     <string name="armar_discurso_seleccionado">seleccionado</string>
     <string name="armar_discurso_no_seleccionado">sin seleccionar</string>
+    <string name="armar_discurso_ranura_vacia">Arrastra aquí tu bloque de %1$s</string>
 
     <!-- Declamación (mecánica núcleo: micrófono real, indicador en vivo, pregón) -->
     <string name="declamacion_cargando_descripcion">Cargando tu discurso</string>

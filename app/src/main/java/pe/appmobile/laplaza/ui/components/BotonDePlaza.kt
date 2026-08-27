@@ -4,10 +4,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,8 +28,9 @@ import androidx.compose.ui.unit.dp
 import pe.appmobile.laplaza.ui.theme.AmbarFarol
 import pe.appmobile.laplaza.ui.theme.IndigoProfundo
 
-/** Tamano minimo de cualquier objeto que el nino toca para jugar (no para ajustes). */
-private val TamanoMinimoTapTarget = 120.dp
+/** El tamano real y por defecto del boton -no solo un minimo-, ver el comentario grande
+ * de abajo sobre por que hace falta ser un tamano FIJO, no solo un `sizeIn(min=...)`. */
+private val TamanoBotonDePlaza = 140.dp
 
 /**
  * Reemplaza a Button para las acciones primarias que el nino toca para jugar -nunca
@@ -39,10 +39,17 @@ private val TamanoMinimoTapTarget = 120.dp
  * [enabled] es true, en eco directo del progreso de la propia plaza: cada logro
  * enciende un farol mas.
  *
- * El minimo de 120dp se aplica por FUERA del [modifier] del llamador a proposito: si
- * alguien pasa un `Modifier.size()` mas chico por error, este componente lo corrige
- * hacia arriba en vez de dejar pasar un objetivo de toque demasiado pequeno para un
- * nino (regla de accesibilidad verificada como ausente en 15 de 17 apps hermanas).
+ * El tamano se fija a 140dp de ancho Y alto, no solo como minimo: un `Canvas(Modifier.fillMaxSize())`
+ * sin un limite propio se estira hasta el ancho maximo disponible en cualquier pantalla
+ * que lo use dentro de un `Column` con `verticalScroll` (la altura entrante ahi es
+ * infinita, pero el ancho sigue acotado por la pantalla) -- error real encontrado
+ * jugando la app de verdad en un emulador (seccion 10.3 del maestro): el boton salia
+ * como una barra ancha y baja, con el texto encimado sobre el dibujo del farol, en vez
+ * del farol cuadrado esperado. Un `sizeIn(minWidth=...)` de solo minimo no lo evita
+ * porque nunca acota el maximo. Ningun llamador de hoy necesita un tamano distinto de
+ * 140dp (ver `ui/screens/HomeScreen.kt`, que ya pasa ese mismo valor); si alguno lo
+ * necesitara en el futuro, agregar un parametro `tamano: Dp = TamanoBotonDePlaza`
+ * explicito es mas seguro que depender del orden de modifiers.
  */
 @Composable
 fun BotonDePlaza(
@@ -59,9 +66,8 @@ fun BotonDePlaza(
 
     Box(
         modifier = Modifier
-            .sizeIn(minWidth = TamanoMinimoTapTarget, minHeight = TamanoMinimoTapTarget)
+            .size(TamanoBotonDePlaza)
             .then(modifier)
-            .defaultMinSize(minWidth = 140.dp, minHeight = 140.dp)
             .scale(escala)
             .clickable(
                 enabled = enabled,

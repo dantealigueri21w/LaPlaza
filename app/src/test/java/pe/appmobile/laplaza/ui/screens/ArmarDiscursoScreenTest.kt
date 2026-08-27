@@ -1,10 +1,16 @@
 package pe.appmobile.laplaza.ui.screens
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.down
+import androidx.compose.ui.test.moveTo
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.up
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -144,5 +150,88 @@ class ArmarDiscursoScreenTest {
         assertEquals(temaId, discurso.temaId)
         assertEquals(listOf(3L, 5L, 7L), discurso.bloques.map { it.id })
         assertEquals(ResultadoValidacion.Valido, MotorDiscurso.validar(discurso))
+    }
+
+    // ---------- Arrastrar de verdad (seccion 1 del maestro: "el mecanismo es el
+    // contenido" -- un chip que solo se toca es opcion multiple disfrazada; el gesto
+    // real de arrastrar hacia arriba, no solo el tap, tiene que colocar el bloque) ----------
+
+    @Test
+    fun `arrastrar un bloque hacia arriba lo coloca en su franja, igual que el tap`() {
+        var discursoRecibido: DiscursoArmado? = null
+        compose.setContent {
+            LaPlazaTheme {
+                ArmarDiscursoScreen(
+                    tituloTema = "Preséntate a la plaza",
+                    bloques = bloquesDeMentira(),
+                    onDeclamar = { discursoRecibido = it },
+                    onVolver = {}
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        // Arrastre real: down sobre el chip, varios move hacia arriba (Compose necesita
+        // mas de un evento de movimiento para reconocerlo como arrastre, no como un
+        // tap), y up -- nunca un performClick.
+        compose.onNodeWithText("Gancho uno").performTouchInput {
+            down(center)
+            moveTo(center - Offset(0f, 40f))
+            moveTo(center - Offset(0f, 140f))
+            moveTo(center - Offset(0f, 260f))
+            up()
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText("Cuerpo uno").performTouchInput {
+            down(center)
+            moveTo(center - Offset(0f, 40f))
+            moveTo(center - Offset(0f, 140f))
+            moveTo(center - Offset(0f, 260f))
+            up()
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText("Cierre uno").performTouchInput {
+            down(center)
+            moveTo(center - Offset(0f, 40f))
+            moveTo(center - Offset(0f, 140f))
+            moveTo(center - Offset(0f, 260f))
+            up()
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Declamar").assertExists()
+        compose.onNodeWithText("Declamar").performClick()
+        compose.waitForIdle()
+
+        val discurso = discursoRecibido
+        requireNotNull(discurso)
+        assertEquals(listOf(1L, 4L, 7L), discurso.bloques.map { it.id })
+        assertEquals(ResultadoValidacion.Valido, MotorDiscurso.validar(discurso))
+    }
+
+    @Test
+    fun `arrastrar un bloque solo un poco, sin cruzar el umbral, NO lo coloca`() {
+        compose.setContent {
+            LaPlazaTheme {
+                ArmarDiscursoScreen(
+                    tituloTema = "Preséntate a la plaza",
+                    bloques = bloquesDeMentira(),
+                    onDeclamar = {},
+                    onVolver = {}
+                )
+            }
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Gancho uno").performTouchInput {
+            down(center)
+            moveTo(center - Offset(0f, 10f))
+            moveTo(center - Offset(0f, 20f))
+            up()
+        }
+        compose.waitForIdle()
+
+        compose.onAllNodesWithText("Declamar").assertCountEquals(0)
+        compose.onNodeWithContentDescription("Gancho uno, sin seleccionar").assertExists()
     }
 }

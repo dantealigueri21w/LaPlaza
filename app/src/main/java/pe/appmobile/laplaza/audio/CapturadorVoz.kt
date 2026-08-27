@@ -133,6 +133,16 @@ class CapturadorVoz(
 
     private var umbral: Float = MotorAcustico.UMBRAL_RMS_VOZ
     private var job: Job? = null
+
+    // @Volatile: se lee y se escribe desde dos hilos reales -el que llama a detener()
+    // (en produccion, el hilo de UI reaccionando al toque de "Terminar") y el hilo de
+    // [dispatcher] que corre calibrar()/procesarSiguienteBloque() en segundo plano.
+    // Sin la garantia de visibilidad entre hilos que da @Volatile, el hilo de fondo
+    // podia no ver a tiempo que ya se llamo a detener() y publicar un Escuchando tardio
+    // que pisara el Detenido recien puesto -- el bug real que encontro
+    // CapturadorVozTest."detener mientras un bloque esta a mitad de lectura...": tocar
+    // "Terminar" en el emulador simplemente no hacia nada, una y otra vez.
+    @Volatile
     private var finalizadoYa = false
 
     /**
@@ -175,11 +185,16 @@ class CapturadorVoz(
         }
         val rmsDeRuido = mutableListOf<Float>()
         for (i in 1..bloquesNecesarios) {
+            if (finalizadoYa) return
             _estado.value = EstadoCapturaEnVivo.Calibrando(progreso = i.toFloat() / bloquesNecesarios)
             val bloque = fuente.leerSiguienteBloque()
             if (bloque.isNotEmpty()) rmsDeRuido.add(MotorAcustico.calcularRms(bloque))
         }
         umbral = derivarUmbral(rmsDeRuido)
+        // finalizadoYa se comprueba DESPUES de la ultima lectura bloqueante, no solo
+        // antes del bucle: detener() pudo llamarse mientras esa ultima lectura estaba en
+        // vuelo (ver el comentario grande de [finalizadoYa]).
+        if (finalizadoYa) return
         _estado.value = EstadoCapturaEnVivo.Escuchando(umbral, ResultadoEnVivo.VACIO)
     }
 
@@ -206,6 +221,11 @@ class CapturadorVoz(
         val bloque = fuente.leerSiguienteBloque()
         if (bloque.isEmpty()) return false
         muestras.add(MotorAcustico.analizarVentana(bloque, fuente.sampleRateHz, umbral))
+        // La lectura de arriba pudo tardar (es bloqueante, igual que AudioRecord.read):
+        // si detener() se llamo mientras tanto, este resultado ya llega tarde y NO debe
+        // pisar el Detenido que detener() ya publico -- ver el comentario grande de
+        // [finalizadoYa].
+        if (finalizadoYa) return false
         _estado.value = EstadoCapturaEnVivo.Escuchando(umbral, calcularResultadoEnVivo())
         return true
     }
