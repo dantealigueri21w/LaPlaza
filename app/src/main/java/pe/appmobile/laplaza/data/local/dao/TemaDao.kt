@@ -24,4 +24,9 @@ interface TemaDao {
 
     @Query("SELECT * FROM tema WHERE id = :id")
     suspend fun obtenerPorId(id: Long): TemaEntity?
+
+    /** Los 21 temas de los 7 rincones juntos, para Rincon Libre: ahi el nino puede elegir
+     * cualquier tema ya visto en cualquier rincon, no solo los de uno. */
+    @Query("SELECT * FROM tema ORDER BY rinconId, orden")
+    fun obtenerTodos(): Flow<List<TemaEntity>>
 }

@@ -7,13 +7,17 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import pe.appmobile.laplaza.data.local.entity.BloqueContenidoEntity
 import pe.appmobile.laplaza.data.local.entity.PerfilEntity
 import pe.appmobile.laplaza.data.local.entity.RachaEntity
 import pe.appmobile.laplaza.data.local.entity.RinconEntity
+import pe.appmobile.laplaza.data.local.entity.TemaEntity
 import pe.appmobile.laplaza.data.repository.LaPlazaRepository
+import pe.appmobile.laplaza.domain.model.SugerenciaRepaso
 
 /**
  * El unico ViewModel de esta tarea (el "shell": navegacion, perfil, home, ajustes). No
@@ -73,4 +77,28 @@ class LaPlazaViewModel(private val repositorio: LaPlazaRepository) : ViewModel()
         repositorio.crearPerfil(alias = alias, avatarId = avatarId)
 
     suspend fun actualizarPerfil(perfil: PerfilEntity) = repositorio.actualizarPerfil(perfil)
+
+    // ---------- Rincon / temas / armado del discurso ----------
+    //
+    // A diferencia de perfil/rincones/racha, estas no son StateFlow: se cargan una sola
+    // vez por visita a la pantalla (TemasDeRinconScreen o ArmarDiscursoScreen), no se
+    // observan de forma continua. El NavHost las llama dentro de un LaunchedEffect y
+    // guarda el resultado en un remember local (ver LaPlazaNavHost.kt).
+
+    /** Los temas de UN rincon real (no sirve para Rincon Libre, ver [todosLosTemas]). */
+    suspend fun temasDe(rinconId: String): List<TemaEntity> =
+        repositorio.obtenerTemasDe(rinconId).first()
+
+    /** Los 21 temas de los 7 rincones juntos, para Rincon Libre. */
+    suspend fun todosLosTemas(): List<TemaEntity> =
+        repositorio.obtenerTodosLosTemas().first()
+
+    suspend fun tema(id: Long): TemaEntity? = repositorio.obtenerTema(id)
+
+    suspend fun bloquesDe(temaId: Long): List<BloqueContenidoEntity> =
+        repositorio.obtenerBloquesDe(temaId)
+
+    /** La sugerencia de repaso real de Chirri (nunca inventada), solo relevante en
+     * Rincon Libre -- ver ficha 24-LA-PLAZA.md, seccion "Repaso". */
+    suspend fun sugerenciaRepaso(): SugerenciaRepaso? = repositorio.sugerirRepaso()
 }

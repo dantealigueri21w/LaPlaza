@@ -105,6 +105,9 @@ class LaPlazaRepository(
 
     fun obtenerTemasDe(rinconId: String): Flow<List<TemaEntity>> = temaDao.obtenerPorRincon(rinconId)
 
+    /** Los 21 temas de los 7 rincones juntos, para Rincon Libre (ver [obtenerTemasDe]). */
+    fun obtenerTodosLosTemas(): Flow<List<TemaEntity>> = temaDao.obtenerTodos()
+
     suspend fun obtenerTema(id: Long): TemaEntity? = temaDao.obtenerPorId(id)
 
     // ---------- Bloques de contenido ----------

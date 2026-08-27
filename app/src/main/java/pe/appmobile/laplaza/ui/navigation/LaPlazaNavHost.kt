@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -22,14 +26,19 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import pe.appmobile.laplaza.R
+import pe.appmobile.laplaza.data.local.entity.BloqueContenidoEntity
+import pe.appmobile.laplaza.data.local.entity.TemaEntity
+import pe.appmobile.laplaza.domain.model.SugerenciaRepaso
 import pe.appmobile.laplaza.ui.LaPlazaViewModel
 import pe.appmobile.laplaza.ui.components.Chirri
 import pe.appmobile.laplaza.ui.components.EstadoChirri
 import pe.appmobile.laplaza.ui.screens.AjustesScreen
+import pe.appmobile.laplaza.ui.screens.ArmarDiscursoScreen
 import pe.appmobile.laplaza.ui.screens.CrearPerfilScreen
 import pe.appmobile.laplaza.ui.screens.HomeScreen
 import pe.appmobile.laplaza.ui.screens.PantallaMarcador
 import pe.appmobile.laplaza.ui.screens.PerfilScreen
+import pe.appmobile.laplaza.ui.screens.TemasDeRinconScreen
 import pe.appmobile.laplaza.ui.theme.BlancoRosado
 
 /**
@@ -142,9 +151,63 @@ fun LaPlazaNavHost(
             val rinconId = backStackEntry.arguments?.getString(Rutas.ARG_RINCON_ID).orEmpty()
             val rincones by viewModel.rincones.collectAsState()
             val nombreLibre = stringResource(R.string.home_rincon_libre)
-            val titulo = rincones.find { it.id == rinconId }?.nombre ?: nombreLibre
+            val tituloRincon = rincones.find { it.id == rinconId }?.nombre ?: nombreLibre
+
+            // Estas dos no son StateFlow del ViewModel a proposito (ver la nota en
+            // LaPlazaViewModel.kt): se cargan una sola vez por visita a esta pantalla, con
+            // un remember por rinconId para que cambiar de rincon (o volver a Rincon Libre)
+            // dispare una nueva carga en vez de arrastrar los temas del rincon anterior.
+            var temas by remember(rinconId) { mutableStateOf<List<TemaEntity>>(emptyList()) }
+            var sugerenciaRepaso by remember(rinconId) { mutableStateOf<SugerenciaRepaso?>(null) }
+
+            LaunchedEffect(rinconId) {
+                if (rinconId == Rutas.ID_RINCON_LIBRE) {
+                    temas = viewModel.todosLosTemas()
+                    sugerenciaRepaso = viewModel.sugerenciaRepaso()
+                } else {
+                    temas = viewModel.temasDe(rinconId)
+                    sugerenciaRepaso = null
+                }
+            }
+
+            TemasDeRinconScreen(
+                tituloRincon = tituloRincon,
+                temas = temas,
+                sugerenciaRepaso = sugerenciaRepaso,
+                onSeleccionarTema = { temaId -> navController.navigate(Rutas.armarDiscursoRuta(temaId)) },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Rutas.ARMAR_DISCURSO,
+            arguments = listOf(navArgument(Rutas.ARG_TEMA_ID) { type = NavType.LongType })
+        ) { backStackEntry ->
+            val temaId = backStackEntry.arguments?.getLong(Rutas.ARG_TEMA_ID) ?: 0L
+
+            var bloques by remember(temaId) { mutableStateOf<List<BloqueContenidoEntity>>(emptyList()) }
+            var tituloTema by remember(temaId) { mutableStateOf("") }
+
+            LaunchedEffect(temaId) {
+                bloques = viewModel.bloquesDe(temaId)
+                tituloTema = viewModel.tema(temaId)?.titulo.orEmpty()
+            }
+
+            ArmarDiscursoScreen(
+                tituloTema = tituloTema,
+                bloques = bloques,
+                // No hay pantalla de declamacion todavia (mic/Chirri/plaza es una tarea
+                // posterior): navegar al marcador con este titulo deja claro que el
+                // discurso SI se armo bien -- MotorDiscurso.validar ya lo confirmo -- y que
+                // falta es la declamacion en si, no el armado.
+                onDeclamar = { navController.navigate(Rutas.DECLAMAR_PROXIMAMENTE) },
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        composable(Rutas.DECLAMAR_PROXIMAMENTE) {
             PantallaMarcador(
-                titulo = titulo,
+                titulo = stringResource(R.string.declamar_proximamente_titulo),
                 onVolver = { navController.popBackStack() }
             )
         }

@@ -38,9 +38,23 @@
     <string name="ajustes_sonido">Sonido</string>
     <string name="ajustes_volver">Volver</string>
 
-    <!-- Pantallas marcador (rincones y Cuaderno de Pregones, contenido real en otra tarea) -->
+    <!-- Pantallas marcador (Cuaderno de Pregones y declamacion, contenido real en otra tarea) -->
     <string name="marcador_mensaje">Aquí vas a armar y decir tu propio discurso muy pronto. ¡Chirri todavía está terminando de prepararlo!</string>
     <string name="cuaderno_titulo">Cuaderno de Pregones</string>
     <string name="accion_volver">Volver</string>
+    <string name="declamar_proximamente_titulo">Declamar (próximamente)</string>
+
+    <!-- Temas de un rincón (selección de tema a declamar) -->
+    <string name="temas_rincon_tema_descripcion">%1$s, dificultad %2$s</string>
+    <string name="temas_rincon_sugerencia_titulo">Chirri te sugiere</string>
+    <string name="temas_rincon_sugerencia_descripcion">Chirri te sugiere: %1$s</string>
+
+    <!-- Armado del discurso (gancho/cuerpo/cierre) -->
+    <string name="armar_discurso_gancho">Gancho</string>
+    <string name="armar_discurso_cuerpo">Cuerpo</string>
+    <string name="armar_discurso_cierre">Cierre</string>
+    <string name="armar_discurso_declamar">Declamar</string>
+    <string name="armar_discurso_seleccionado">seleccionado</string>
+    <string name="armar_discurso_no_seleccionado">sin seleccionar</string>
 
 </resources>

@@ -5,9 +5,13 @@ package pe.appmobile.laplaza.ui.navigation
  * de Pregones + perfil + ajustes) mas la creacion de perfil, que no es una de las 12
  * pantallas del juego sino un paso previo de primer arranque (seccion 2 de la tarea).
  *
- * Los 7 rincones y el Rincon Libre comparten una sola ruta parametrizada -- todos son,
- * por ahora, el mismo destino marcador (ver ui/screens/PantallaMarcador.kt); una tarea
- * posterior reemplaza el destino real de cada rincon uno por uno.
+ * Los 7 rincones y el Rincon Libre comparten una sola ruta parametrizada ([RINCON]),
+ * cuyo destino real es [TemasDeRinconScreen][pe.appmobile.laplaza.ui.screens.TemasDeRinconScreen]
+ * (la seleccion de tema). Elegir un tema navega a [ARMAR_DISCURSO], el tablero real de
+ * armado del discurso (gancho/cuerpo/cierre). El Cuaderno de Pregones y la declamacion
+ * en si ([DECLAMAR_PROXIMAMENTE]) siguen siendo el destino marcador (ver
+ * ui/screens/PantallaMarcador.kt); una tarea posterior reemplaza cada uno por su
+ * contenido real.
  */
 object Rutas {
     const val CREAR_PERFIL = "crear_perfil"
@@ -24,4 +28,14 @@ object Rutas {
     const val ID_RINCON_LIBRE = "LIBRE"
 
     fun rinconRuta(rinconId: String): String = "rincon/$rinconId"
+
+    const val ARG_TEMA_ID = "temaId"
+    const val ARMAR_DISCURSO = "armar/{$ARG_TEMA_ID}"
+
+    fun armarDiscursoRuta(temaId: Long): String = "armar/$temaId"
+
+    /** Destino marcador para la declamacion real (mic/Chirri/plaza), que es una tarea
+     * posterior: [ArmarDiscursoScreen][pe.appmobile.laplaza.ui.screens.ArmarDiscursoScreen]
+     * navega aqui al terminar de armar un discurso valido. */
+    const val DECLAMAR_PROXIMAMENTE = "declamar_proximamente"
 }
