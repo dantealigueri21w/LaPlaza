@@ -105,3 +105,62 @@ degradados/sombra/curvas en Chirri, los símbolos de rincón y las insignias.
 Pendiente antes de la entrega final (fuera del alcance de esta build): memoria descriptiva y
 manual de usuario (fase 2, con capturas del APK real), y la carpeta de entrega numerada
 (sección 14.3 del maestro).
+
+## Corrección posterior a la Fase 2, 27/08/2026: bug real de fluidez en silencio total
+
+Rodrigo probó el APK real en su celular sin decir ninguna palabra durante una declamación
+(solo armó el discurso y tocó Hablar/Terminar), y la app respondió "Dijiste... sin cortes,
+de principio a fin", como si el discurso se hubiera dicho completo. El mismo patrón se
+reprodujo, sin notarlo en el momento, en el emulador de la Fase 2 (grabación con `-no-audio`,
+sin voz real de principio a fin).
+
+**Causa real:** `MotorAcustico.detectarPausas` agrupa un silencio continuo en una sola
+`Pausa`, y esa pausa puede llegar a durar la grabación entera. Antes de esta corrección,
+`MotorFluidez.calcularFluidez` penalizaba cualquier pausa "sucia" aislada (fuera de 200-900
+ms) con un monto fijo de 0.05, sin importar si duraba 901 ms o los 8 segundos completos de la
+grabación. Silencio total terminaba en fluidez ≈0.95, arriba del umbral de 0.9 que
+`MotorInsignias` usa para otorgar la insignia "Sin Cortes" — se podía ganar esa insignia sin
+haber hablado.
+
+**Corrección:** la penalización de una pausa aislada fuera del rango limpio ahora escala con
+la proporción de la grabación entera que esa pausa ocupa (`pausa.duracionMs /
+duracionTotalMs`), no un monto fijo. Silencio total o casi total cae a fluidez cercana a 0;
+una pausa corta y aislada dentro de un discurso mayormente hablado sigue penalizando poco,
+igual que antes. `MotorFluidezTest.kt` tiene 3 pruebas nuevas que reproducen el caso real
+(silencio total, discurso a medias, y el caso normal ya cubierto sin cambios).
+
+```
+./gradlew clean testDebugUnitTest
+→ BUILD SUCCESSFUL, 203 pruebas, 0 fallos, 0 errores (200 anteriores + 3 nuevas)
+
+./gradlew lintDebug
+→ BUILD SUCCESSFUL
+
+./gradlew assembleDebug
+→ BUILD SUCCESSFUL
+```
+
+## Corrección posterior a la Fase 2, 27/08/2026: la app no tenía ícono de lanzador
+
+El manifiesto no declaraba `android:icon`, y no existía ningún recurso `mipmap-*`: al
+instalar la app, Android mostraba el ícono genérico del sistema en vez de uno propio.
+
+Se agregó un ícono adaptable (API 26+) más una versión plana de respaldo para API 24-25 (el
+`minSdk` real del proyecto), ambos como `VectorDrawable` en XML, sin ningún archivo de imagen
+externo (misma vía de arte 100% código que ya usa el resto de la app, sección 4.0 del
+maestro): el mismo farol que ya dibuja `BotonDePlaza` en toda la app, en la paleta real de
+`ui/theme/Color.kt` (fondo `RosaBerenjena`, farol en `AmbarFarol`/`IndigoProfundo`).
+
+```
+app/src/main/res/
+  drawable/ic_launcher_background.xml
+  drawable/ic_launcher_foreground.xml
+  mipmap-anydpi-v26/ic_launcher.xml        (adaptive-icon, API 26+)
+  mipmap-anydpi-v26/ic_launcher_round.xml
+  mipmap/ic_launcher.xml                    (vector plano, respaldo API 24-25)
+  mipmap/ic_launcher_round.xml
+```
+
+Verificado con `aapt2 dump badging` sobre el APK recompilado:
+`application: label='La Plaza' icon='res/mipmap-anydpi-v26/ic_launcher.xml'` (antes,
+`icon=''`). Permisos sin cambios: solo `RECORD_AUDIO`, sin `INTERNET`.

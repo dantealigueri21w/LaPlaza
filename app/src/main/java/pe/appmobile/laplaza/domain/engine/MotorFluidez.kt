@@ -17,7 +17,16 @@ object MotorFluidez {
             if (grupo.size == 1) {
                 val pausa = grupo[0]
                 if (pausa.duracionMs !in PAUSA_LIMPIA_MIN_MS..PAUSA_LIMPIA_MAX_MS) {
-                    penalizacion += 0.05f
+                    // La penalizacion escala con cuanto de la grabacion entera ocupa esta
+                    // pausa, no un monto fijo: sin esto, una sola pausa "sucia" de 900ms en
+                    // un intento de 8s y una de silencio TOTAL de 8s en ese mismo intento
+                    // recibian la misma penalizacion de 0.05, y el silencio total (ninguna
+                    // palabra dicha) quedaba en fluidez ~0.95 -- casi perfecta, y suficiente
+                    // para ganar la insignia Sin Cortes sin haber hablado. Bug real,
+                    // reportado por Rodrigo jugando en su celular sin decir nada, y
+                    // reproducido ademas en el emulador de la Fase 2 con -no-audio.
+                    val proporcionDeLaGrabacion = pausa.duracionMs.toFloat() / duracionTotalMs.toFloat()
+                    penalizacion += 0.05f + proporcionDeLaGrabacion
                 }
             } else {
                 penalizacion += 0.15f * (grupo.size - 1)
